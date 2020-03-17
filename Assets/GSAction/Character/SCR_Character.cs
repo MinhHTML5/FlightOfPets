@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SCR_Character : MonoBehaviour {
-	public const float GRAVITY = 10.0f;
+	public const float GRAVITY = 15.0f;
 	public const float CHAR_SIZE = 0.6f;
 	public const float OFFSET_X = 1.5f;
 	public const float OFFSET_Y = 1;
 	public const float START_SPEED = 10;
-	public const float BASE_ANGLE_DIFFERENCE = 25;
+	public const float SPEED_BOOST_DOWN = 1.0f;
+	public const float SPEED_BOOST_UP = 0.3f;
+	public const float AIR_TIME = 1.0f;
 	
 	public float oldX = 0;
 	public float x = 0;
@@ -16,6 +18,8 @@ public class SCR_Character : MonoBehaviour {
 	public float angle = 0;
 	public float speedX = 0;
 	public float speedY = 0;
+	
+	private float airTimeCount = 0;
 	
 	
     private void Start() {
@@ -39,22 +43,38 @@ public class SCR_Character : MonoBehaviour {
 		angle = CalculateAngle(speedX, speedY);
 		float terrainAngle = CalculateAngle(x - oldX, newTerrainY - oldTerrainY);
 		
-		
-		y += speedY * dt;
+		float fallAmount = speedY * dt;
+		y += fallAmount;
 		speedY -= GRAVITY * dt;
 		
+		
 		if (y <= newTerrainY + CHAR_SIZE) {
-			float angleDifference = Mathf.Abs(angle - terrainAngle);
-			float speedBonus = (BASE_ANGLE_DIFFERENCE - angleDifference) / (90 - BASE_ANGLE_DIFFERENCE); // (0.3 -> -1)
 			float combineSpeed = Mathf.Sqrt (speedX * speedX + speedY * speedY);
 			
-			combineSpeed += combineSpeed * (speedBonus / 2) * dt;
+			if (airTimeCount > AIR_TIME) {
+				float angleDifference = Mathf.Abs(angle - terrainAngle);
+				float speedPenalty = angleDifference / 90;
+				
+				combineSpeed -= combineSpeed * speedPenalty / 2;
+			}
+			else {
+				if (terrainAngle < 0) {
+					combineSpeed += combineSpeed * SPEED_BOOST_DOWN * dt;
+				}
+				else {
+					combineSpeed += combineSpeed * SPEED_BOOST_UP * dt;
+				}
+			}
 			
 			speedX = combineSpeed * Mathf.Cos(terrainAngle * Mathf.Deg2Rad);
 			speedY = combineSpeed * Mathf.Sin(terrainAngle * Mathf.Deg2Rad);
 			
+			airTimeCount = 0;
 			angle = terrainAngle;
 			y = newTerrainY + CHAR_SIZE;
+		}
+		else {
+			airTimeCount += dt;
 		}
 		
 		
