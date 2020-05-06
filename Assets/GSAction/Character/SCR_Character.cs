@@ -77,10 +77,19 @@ public class SCR_Character : MonoBehaviour {
 			airTimeCount += dt;
 		}
 		
-		
-		
 		transform.position = new Vector3(transform.position.x, y, 0);
 		transform.localEulerAngles = new Vector3(0, 0, angle);
+		
+		if (y > OFFSET_Y) {
+			float yDiff = y - OFFSET_Y;
+			float xDiff = yDiff * SCR_Action.SCREEN_RATIO;
+			
+			Camera.main.transform.position = new Vector3 (xDiff * 0.5f, yDiff * 0.5f, -10);
+			Camera.main.orthographicSize = SCR_Action.SCREEN_H * 0.5f + yDiff * 0.5f;
+		}
+		else {
+			Camera.main.orthographicSize = SCR_Action.SCREEN_H * 0.5f;
+		}
     }
 	
 	private float CalculateAngle(float distX, float distY) {
